@@ -1,6 +1,6 @@
 # MDEMG Windows Beta Testing Guide
 
-**Version under test:** v0.2.8+
+**Version under test:** v0.2.10
 **Date:** _______________
 **Tester:** _______________
 **Machine specs:** _______________
@@ -93,8 +93,6 @@ Expand-Archive $zipName -DestinationPath "$HOME\mdemg"
 [Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$HOME\mdemg", "User")
 $env:PATH += ";$HOME\mdemg"
 ```
-
-> **Note:** If the Windows zip is not in the latest release, you may need to build from source or wait for a tagged release that includes Windows artifacts. Check https://github.com/reh3376/mdemg/releases for available assets.
 
 **Expected:** Installer completes without errors. `mdemg.exe` is on PATH.
 
@@ -820,7 +818,7 @@ mdemg config set-secret TEST_BETA_KEY ""
 
 ### 1. Daemon Mode (`mdemg start/stop/restart`)
 
-**Issue:** Uses Unix-only syscalls (`syscall.Kill`, `syscall.SysProcAttr{Setsid: true}`) that do not compile or function on Windows.
+**Issue:** Daemon mode compiles on Windows but uses platform-specific process management (tasklist for process checks, `CREATE_NEW_PROCESS_GROUP` for detach). It may not behave identically to Unix daemon mode. Test carefully — if it doesn't work, use the foreground fallback.
 
 **Workaround:** Use `mdemg serve --auto-migrate` in a foreground PowerShell window instead. For unattended operation, create a Windows Task Scheduler entry:
 
