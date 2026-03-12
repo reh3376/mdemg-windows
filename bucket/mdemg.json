@@ -1,5 +1,5 @@
 {
-    "version": "0.2.8",
+    "version": "0.2.10",
     "description": "MDEMG — Multi-Dimensional Emergent Memory Graph. Persistent memory for AI agents with Hebbian learning.",
     "homepage": "https://github.com/reh3376/mdemg",
     "license": "MIT",
@@ -13,8 +13,8 @@
     },
     "architecture": {
         "64bit": {
-            "url": "https://github.com/reh3376/mdemg/releases/download/v0.2.8/mdemg_0.2.8_windows_amd64.zip",
-            "hash": ""
+            "url": "https://github.com/reh3376/mdemg/releases/download/v0.2.10/mdemg_0.2.10_windows_amd64.zip",
+            "hash": "d77b2eb3ad6598ae2c762580aa09866d1a864b84d9487ed1880f8fc2dabafedf"
         }
     },
     "bin": "mdemg.exe",
