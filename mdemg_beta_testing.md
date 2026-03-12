@@ -301,20 +301,20 @@ func main() {
 
 ### Prerequisites Checklist Summary
 
-| # | Requirement | Status |
-|---|-------------|--------|
-| 1 | Windows 10 21H2+ or Windows 11 | |
-| 2 | Hardware virtualization enabled | |
-| 3 | WSL 2 enabled | |
-| 4 | PowerShell 7+ installed | |
-| 5 | Execution policy: RemoteSigned | |
-| 6 | Docker Desktop installed and running | |
-| 7 | Internet access confirmed | |
-| — | *OpenAI API key (optional)* | |
-| — | *Ollama (optional)* | |
-| — | *Git for Windows + Git Bash (optional)* | |
-| — | *Scoop (optional, Method B only)* | |
-| — | Test project created | |
+| # | Requirement | Status | Comments |
+|---|-------------|--------|----------|
+| 1 | Windows 10 21H2+ or Windows 11 | | Required for WSL 2 and Docker Desktop. Verify: `winver` → Build 19044+ |
+| 2 | Hardware virtualization enabled | | Docker Desktop requires VT-x/AMD-V. Verify: Task Manager → Performance → CPU → "Virtualization: Enabled" |
+| 3 | WSL 2 enabled | | Docker Desktop backend on Windows. Verify: `wsl --status` shows "Default Version: 2" |
+| 4 | PowerShell 7+ installed | | Installer script uses `#Requires -Version 7.0`. Verify: `$PSVersionTable.PSVersion.Major` ≥ 7 |
+| 5 | Execution policy: RemoteSigned | | Allows running downloaded scripts (installer, hooks). Verify: `Get-ExecutionPolicy` returns `RemoteSigned` |
+| 6 | Docker Desktop installed and running | | Neo4j runs as a Docker container. Verify: `docker info` succeeds without errors |
+| 7 | Internet access confirmed | | Needed to download release binary and Docker images. Verify: `Test-Connection github.com -Count 1` |
+| — | *OpenAI API key (optional)* | | Enables LLM summaries, recall re-ranking, consolidation naming. Without it, those features return degraded results. Verify: `$env:OPENAI_API_KEY` is set |
+| — | *Ollama (optional)* | | Local LLM alternative to OpenAI — no API key needed. Verify: `ollama list` shows available models |
+| — | *Git for Windows + Git Bash (optional)* | | Required for incremental ingest, git hooks, and commit-triggered ingestion. Verify: `git --version` in PowerShell |
+| — | *Scoop (optional, Method B only)* | | Package manager for easy install/update/uninstall. Verify: `scoop --version` |
+| — | Test project created | | Isolated directory for beta testing. Verify: `Test-Path C:\Projects\mdemg-test` returns `True` |
 
 ---
 
