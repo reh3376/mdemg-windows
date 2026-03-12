@@ -187,7 +187,7 @@ mdemg db migrate
 mdemg start --auto-migrate
 ```
 
-> **Known limitation:** Daemon mode (`mdemg start`) uses Unix-only process signals and will likely fail on Windows. If it fails, use the foreground fallback below.
+> **Note:** Daemon mode now compiles on Windows with platform-specific process management, but may not behave identically to Unix. If it doesn't start correctly, use the foreground fallback below.
 
 **Fallback — foreground mode (open a second PowerShell window):**
 
