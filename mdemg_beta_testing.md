@@ -24,29 +24,247 @@
 
 ## Prerequisites
 
-Before starting, confirm the following are installed and running:
+Complete each section below in order before starting the tests. Do not assume anything is pre-installed — verify each item.
 
-| Requirement | Minimum Version | How to Install |
-|-------------|-----------------|----------------|
-| **Windows** | 10 or 11 (build 19041+) | — |
-| **PowerShell** | 7.0+ | `winget install Microsoft.PowerShell` |
-| **Docker Desktop** | latest, running | `winget install Docker.DockerDesktop` |
-| **Internet access** | — | Required for installation and GitHub API |
+### Step 1: Verify Windows Version
 
-**Optional (some tests require these):**
+MDEMG requires Windows 10 version 21H2 or later, or Windows 11. Docker Desktop (required for Neo4j) needs WSL 2 support which is only available on these versions.
 
-| Requirement | Purpose | How to Install |
-|-------------|---------|----------------|
-| OpenAI API key | Embedding-powered recall, consolidation | [platform.openai.com](https://platform.openai.com) |
-| Ollama | Local-only alternative to OpenAI | [ollama.com](https://ollama.com) |
-| Git for Windows | Git hooks, incremental ingest | `winget install Git.Git` |
+```powershell
+# Check your Windows version
+[System.Environment]::OSVersion.Version
+# Must be 10.0.19044 or higher
+
+# Check build number
+(Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").DisplayVersion
+# Must be 21H2 or later
+```
+
+- [ ] Windows version verified: _______________
+
+### Step 2: Enable Hardware Virtualization
+
+Docker Desktop requires hardware virtualization (Intel VT-x or AMD-V) enabled in your BIOS/UEFI firmware. This is often disabled by default on new machines.
+
+```powershell
+# Check if virtualization is enabled
+(Get-CimInstance Win32_Processor).VirtualizationFirmwareEnabled
+# Must return True
+```
+
+If `False`, restart your machine, enter BIOS/UEFI settings (usually F2, F10, F12, or DEL during boot), find the virtualization option (may be labeled "Intel Virtualization Technology", "VT-x", "AMD-V", or "SVM Mode"), enable it, and save/restart.
+
+- [ ] Hardware virtualization enabled
+
+### Step 3: Enable WSL 2
+
+Docker Desktop for Windows requires WSL 2 (Windows Subsystem for Linux version 2). This requires enabling two Windows features.
+
+```powershell
+# Run PowerShell as Administrator for this step
+# Option A — single command (requires restart):
+wsl --install
+
+# Option B — if wsl command is not found, enable features manually:
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+# Then restart your machine
+
+# After restart, verify WSL 2 is available:
+wsl --status
+```
+
+> **Note:** `wsl --install` also installs a default Linux distribution (Ubuntu). This is fine — Docker Desktop uses WSL 2 as its backend but does not require a Linux distribution for MDEMG.
+
+- [ ] WSL 2 enabled and working
+
+### Step 4: Install PowerShell 7+
+
+Windows ships with **PowerShell 5.1** ("Windows PowerShell"), which is NOT the same as **PowerShell 7+** ("PowerShell"). The MDEMG installer script requires PowerShell 7.0 or later and will not run on PowerShell 5.1.
+
+```powershell
+# Check if PowerShell 7+ is already installed
+pwsh --version
+# If this returns "PowerShell 7.x.x", skip to the next step
+
+# Install PowerShell 7 — choose one method:
+
+# Method A — winget (if available; ships with Windows 11, may need App Installer on Windows 10):
+winget install Microsoft.PowerShell
+
+# Method B — MSI installer (works on any Windows version):
+# Download from: https://github.com/PowerShell/PowerShell/releases/latest
+# Choose the "PowerShell-7.x.x-win-x64.msi" file, run the installer
+
+# Method C — Microsoft Store:
+# Search for "PowerShell" in the Microsoft Store app and install it
+```
+
+After installation, close your current terminal and open **PowerShell 7** (not "Windows PowerShell"):
+- Search for "pwsh" or "PowerShell 7" in the Start menu
+- Or run `pwsh` from any terminal
+
+```powershell
+# Verify you are in PowerShell 7+
+$PSVersionTable.PSVersion
+# Major must be 7 or higher
+```
+
+- [ ] PowerShell 7+ installed, version: _______________
+
+### Step 5: Set Execution Policy
+
+PowerShell's default execution policy on Windows client machines is `Restricted`, which blocks all scripts. You must change this to allow running the MDEMG installer and PowerShell wrapper scripts.
+
+```powershell
+# Check current policy
+Get-ExecutionPolicy -Scope CurrentUser
+
+# If it says "Restricted" or "AllSigned", change it:
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+# Verify
+Get-ExecutionPolicy -Scope CurrentUser
+# Must say "RemoteSigned" or "Unrestricted"
+```
+
+- [ ] Execution policy set to RemoteSigned or Unrestricted
+
+### Step 6: Install Docker Desktop
+
+Docker Desktop runs the Neo4j database container. MDEMG cannot function without it.
+
+```powershell
+# Check if Docker is already installed and running
+docker --version
+docker info   # This must succeed — if it errors, Docker Desktop is not running
+
+# Install Docker Desktop — choose one method:
+
+# Method A — winget:
+winget install Docker.DockerDesktop
+
+# Method B — direct download:
+# Download from: https://www.docker.com/products/docker-desktop/
+# Run the installer, follow prompts
+# IMPORTANT: Select "Use WSL 2 instead of Hyper-V" when prompted
+```
+
+After installation:
+1. Launch Docker Desktop from the Start menu
+2. Wait for Docker Desktop to finish starting (system tray icon stops animating)
+3. Accept the license agreement if prompted
+
+```powershell
+# Verify Docker is running
+docker info
+# Should show "Server: Docker Desktop" and WSL 2 backend info
+
+docker run --rm hello-world
+# Should print "Hello from Docker!"
+```
+
+> **Note:** Docker Desktop must be running whenever you use MDEMG. It does not auto-start by default — you may want to enable "Start Docker Desktop when you sign in" in Docker Desktop Settings > General.
+
+- [ ] Docker Desktop installed and running, version: _______________
+
+### Step 7: Internet Access
+
+The machine must have internet access to:
+- Download the MDEMG binary from GitHub releases
+- Pull the Neo4j Docker image (`neo4j:5`, ~500MB) on first `mdemg db start`
+- (Optional) Connect to the OpenAI API for embeddings
+
+```powershell
+# Verify connectivity to GitHub
+Invoke-RestMethod https://api.github.com/repos/reh3376/mdemg/releases/latest | Select-Object -Property tag_name
+```
+
+- [ ] Internet access confirmed
+
+### Optional Prerequisites
+
+These are not required for basic testing but are needed for specific test tiers.
+
+#### OpenAI API Key (Tier 2-3: recall, consolidation, memory retrieval)
+
+Required for embedding-powered features: semantic recall, consolidation concept naming, memory retrieval, and SME consulting. Without a key, these features run in degraded mode (stub embeddings or no results).
+
+1. Sign up at [platform.openai.com](https://platform.openai.com)
+2. Create an API key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+3. Save the key — you'll configure it during `mdemg init` or set it in a `.env` file
+
+- [ ] OpenAI API key obtained (or will skip embedding tests)
+
+#### Ollama (Alternative to OpenAI)
+
+Local-only alternative to OpenAI for embeddings. No API key or internet required after initial download.
+
+1. Download from [ollama.com/download/windows](https://ollama.com/download/windows)
+2. Run the installer
+3. Pull an embedding model: `ollama pull nomic-embed-text`
+
+- [ ] Ollama installed (or using OpenAI, or will skip embedding tests)
+
+#### Git for Windows (Tier 2: hooks, incremental ingest, test project setup)
+
+Required for git hooks, incremental ingest (`--since`), and setting up the test project. The MDEMG git hook script uses `#!/bin/bash` and requires Git Bash (bundled with Git for Windows by default).
+
+```powershell
+# Check if Git is already installed
+git --version
+
+# Install Git — choose one method:
+
+# Method A — winget:
+winget install Git.Git
+
+# Method B — direct download:
+# Download from: https://gitforwindows.org/
+# Run the installer
+# IMPORTANT: Keep "Git Bash" selected (default) — MDEMG hooks require it
+```
+
+After installation, close and reopen your PowerShell window so `git` is on PATH.
+
+```powershell
+# Verify
+git --version
+# Verify Git Bash is available (required for MDEMG hooks)
+Get-Command bash -ErrorAction SilentlyContinue
+```
+
+- [ ] Git installed, version: _______________
+- [ ] Git Bash available (bash.exe on PATH)
+- [ ] **SKIP** — will skip git-dependent tests (T2.4, T2.5)
+
+#### Scoop Package Manager (Installation Method B only)
+
+Only needed if you plan to install MDEMG via Scoop. Not required for Method A (PowerShell installer) or Method C (manual).
+
+```powershell
+# Check if Scoop is installed
+scoop --version
+
+# Install Scoop (requires PowerShell 5+ and .NET Framework 4.5+):
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+Invoke-RestMethod get.scoop.sh | Invoke-Expression
+```
+
+- [ ] Scoop installed (or using a different installation method)
 
 ### Set Up Test Project
+
+> **Requires:** Git for Windows (from optional prerequisites above). If Git is not installed, you can still test most features — just create the test directory and file manually without the git commands.
+
+**With Git installed:**
 
 ```powershell
 mkdir C:\Projects\mdemg-test
 cd C:\Projects\mdemg-test
 git init
+git config user.email "tester@example.com"
+git config user.name "Beta Tester"
 # Create a sample file for ingestion tests
 @"
 package main
@@ -57,8 +275,46 @@ func main() {
     fmt.Println("Hello from MDEMG beta test")
 }
 "@ | Set-Content main.go
-git add . && git commit -m "initial commit"
+git add .
+git commit -m "initial commit"
 ```
+
+**Without Git (manual alternative):**
+
+```powershell
+mkdir C:\Projects\mdemg-test
+cd C:\Projects\mdemg-test
+@"
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello from MDEMG beta test")
+}
+"@ | Set-Content main.go
+```
+
+> **Note:** Without Git, you will need to skip tests T2.4 (incremental ingest), T2.5 (hooks), and T1.3's init may not detect a git repo.
+
+- [ ] Test project directory created at `C:\Projects\mdemg-test`
+
+### Prerequisites Checklist Summary
+
+| # | Requirement | Status |
+|---|-------------|--------|
+| 1 | Windows 10 21H2+ or Windows 11 | |
+| 2 | Hardware virtualization enabled | |
+| 3 | WSL 2 enabled | |
+| 4 | PowerShell 7+ installed | |
+| 5 | Execution policy: RemoteSigned | |
+| 6 | Docker Desktop installed and running | |
+| 7 | Internet access confirmed | |
+| — | *OpenAI API key (optional)* | |
+| — | *Ollama (optional)* | |
+| — | *Git for Windows + Git Bash (optional)* | |
+| — | *Scoop (optional, Method B only)* | |
+| — | Test project created | |
 
 ---
 
