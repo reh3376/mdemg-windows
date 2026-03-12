@@ -9,8 +9,7 @@
 | **PowerShell** | 7.0+ | `winget install Microsoft.PowerShell` |
 | **Docker Desktop** | latest | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) or `winget install Docker.DockerDesktop` |
 | **OpenAI API key** | — | [platform.openai.com](https://platform.openai.com) — or use [Ollama](https://ollama.com) for local-only |
-
-> Python 3.12+ and `uv` are optional but recommended for some ingest features.
+| **Git** (optional) | latest | `winget install Git.Git` — needed for git hooks and incremental ingest |
 
 ---
 
@@ -68,10 +67,12 @@ Creates config, starts Neo4j, starts the server, applies migrations, and confirm
 ```powershell
 mdemg init                    # Interactive wizard
 mdemg db start                # Start Neo4j container
-mdemg start --auto-migrate    # Start server with migrations
+mdemg start --auto-migrate    # Start server (background daemon)
 mdemg status                  # Verify everything is running
 mdemg ingest --path .         # Ingest your codebase
 ```
+
+> **Note:** If `mdemg start` does not work as expected on your system, use `mdemg serve --auto-migrate` in a separate PowerShell window to run the server in the foreground instead.
 
 ---
 
@@ -81,20 +82,20 @@ mdemg ingest --path .         # Ingest your codebase
 |---------|-------------|
 | `mdemg init` | Interactive setup wizard (`--defaults` / `--quick`) |
 | `mdemg version` | Print version, platform, build info |
-| `mdemg start` | Start server in background |
+| `mdemg start` | Start server in background (daemon mode) |
 | `mdemg stop` | Stop the running server |
 | `mdemg restart` | Restart the server |
 | `mdemg status` | Show server, database, and embedding status |
-| `mdemg serve` | Run server in foreground (development) |
+| `mdemg serve` | Run server in foreground (recommended for Windows) |
 | `mdemg db start` | Start Neo4j container |
-| `mdemg db stop` | Stop Neo4j container |
+| `mdemg db stop` | Stop Neo4j container (`--remove` to delete) |
 | `mdemg db status` | Show container and schema status |
 | `mdemg db migrate` | Apply pending schema migrations |
 | `mdemg db shell` | Open interactive cypher-shell |
 | `mdemg db backup` | Trigger or list backups |
-| `mdemg db stop --remove` | Stop and remove Neo4j container |
 | `mdemg ingest --path .` | Ingest a codebase into the knowledge graph |
 | `mdemg watch --path .` | Watch a directory and auto-ingest on changes |
+| `mdemg extract-symbols` | Extract code symbols from a codebase |
 | `mdemg consolidate` | Run hidden layer clustering |
 | `mdemg decay` | Apply temporal decay to learning edges |
 | `mdemg prune` | Prune weak edges, tombstone orphans |
@@ -102,9 +103,13 @@ mdemg ingest --path .         # Ingest your codebase
 | `mdemg config show` | Display effective configuration |
 | `mdemg config validate` | Validate config and probe connectivity |
 | `mdemg config set-secret K V` | Store secret in Windows Credential Manager |
+| `mdemg config get-secret K` | Retrieve a secret from Windows Credential Manager |
+| `mdemg config list-secrets` | List known secrets and their keychain status |
 | `mdemg hooks install` | Install git post-commit hook |
 | `mdemg mcp` | Run MCP server for IDE integration |
-| `mdemg space list\|export\|import` | Manage memory spaces |
+| `mdemg sidecar` | Sidecar lifecycle management (up, down, attach, detach) |
+| `mdemg plugin` | Manage MDEMG plugins |
+| `mdemg space` | Manage spaces (list, export, import, copy, delete, rename, info) |
 | `mdemg demo` | Run interactive demo |
 | `mdemg upgrade` | Self-update to latest release |
 
@@ -173,9 +178,20 @@ mdemg config validate
 ## Upgrading
 
 ```powershell
+# Option A — PowerShell installer (recommended)
+.\Install-MDEMG.ps1 -Upgrade
+
+# Option B — Scoop
+scoop update mdemg
+
+# Option C — mdemg self-update (may fail — see note)
 mdemg upgrade
-mdemg start --auto-migrate   # apply any new migrations
+
+# After upgrading, apply any new migrations
+mdemg start --auto-migrate
 ```
+
+> **Note:** `mdemg upgrade` currently looks for `.tar.gz` archives, but Windows releases are `.zip`. It may report "no release binary found for windows/amd64." Use Option A or B until this is fixed.
 
 ## Uninstall
 
@@ -213,4 +229,5 @@ Remove-Item "$HOME\.mdemg" -Recurse -Force
 
 - [Source Code (MDEMG)](https://github.com/reh3376/mdemg)
 - [macOS Homebrew tap](https://github.com/reh3376/homebrew-mdemg)
+- [Windows Beta Testing Guide](mdemg_beta_testing.md)
 - [Issues](https://github.com/reh3376/mdemg/issues)
