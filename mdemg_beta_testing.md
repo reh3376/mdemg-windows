@@ -381,10 +381,12 @@ mdemg v0.2.x
 
 ```powershell
 cd C:\Projects\mdemg-test
-mdemg init --defaults
+mdemg init
 ```
 
-**Expected:** Creates `.mdemg/config.yaml` and `.mdemgignore` in the current directory.
+**Expected:** Interactive wizard prompts for Space ID, Neo4j URI, embedding provider, and OpenAI API key. Creates `.mdemg/config.yaml`, `.mdemgignore`, and `.env` in the current directory.
+
+> **Important:** Do NOT use `--defaults` here. The interactive wizard lets you enter your OpenAI API key, which is required for embedding and LLM features in subsequent tests. If you skip this, `mdemg start` will fail on embedding checks.
 
 ```powershell
 # Verify files exist
