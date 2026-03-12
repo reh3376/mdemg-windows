@@ -1,11 +1,12 @@
 {
-    "version": "0.2.10",
+    "version": "0.2.11",
     "description": "MDEMG — Multi-Dimensional Emergent Memory Graph. Persistent memory for AI agents with Hebbian learning.",
     "homepage": "https://github.com/reh3376/mdemg",
     "license": "MIT",
     "notes": [
         "MDEMG requires Docker Desktop for Neo4j.",
         "Run 'mdemg init' to get started.",
+        "UxTS plugin is bundled — 'mdemg init' will ask to enable it.",
         "Docs: https://github.com/reh3376/homebrew-mdemg"
     ],
     "suggest": {
@@ -13,11 +14,12 @@
     },
     "architecture": {
         "64bit": {
-            "url": "https://github.com/reh3376/mdemg/releases/download/v0.2.10/mdemg_0.2.10_windows_amd64.zip",
-            "hash": "d77b2eb3ad6598ae2c762580aa09866d1a864b84d9487ed1880f8fc2dabafedf"
+            "url": "https://github.com/reh3376/mdemg/releases/download/v0.2.11/mdemg_0.2.11_windows_amd64.zip",
+            "hash": "4822d3793a465125ca563f28779c409a23545691fd3f749d2a8a6b10c717285c"
         }
     },
     "bin": "mdemg.exe",
+    "post_install": "& \"$dir\\Install-MDEMG.ps1\" -InstallDir \"$dir\" -Upgrade 2>$null; if (Test-Path \"$dir\\uxts-module.exe\") { $p = \"$dir\\plugins\\uxts-module\"; New-Item -ItemType Directory -Force -Path $p | Out-Null; Move-Item \"$dir\\uxts-module.exe\" \"$p\\uxts-module.exe\" -Force; Move-Item \"$dir\\manifest.json\" \"$p\\manifest.json\" -Force }",
     "checkver": {
         "github": "https://github.com/reh3376/mdemg"
     },

@@ -17,6 +17,9 @@
 .PARAMETER Uninstall
     Remove MDEMG CLI from the system.
 
+.PARAMETER NoPlugins
+    Skip installation of bundled plugins (UxTS module).
+
 .PARAMETER InstallDir
     Override installation directory (default: %USERPROFILE%\mdemg)
 
@@ -32,6 +35,7 @@
 param(
     [switch]$Upgrade,
     [switch]$Uninstall,
+    [switch]$NoPlugins,
     [string]$InstallDir = (Join-Path $env:USERPROFILE "mdemg")
 )
 
@@ -217,6 +221,36 @@ function Install-MdemgCli {
         exit 1
     }
 
+    # Install plugins (default: enabled)
+    if (!$NoPlugins) {
+        $pluginDir = Join-Path $InstallDir "plugins\uxts-module"
+        $pluginBinary = Join-Path $InstallDir "plugins\uxts-module\uxts-module.exe"
+        $pluginManifest = Join-Path $InstallDir "plugins\uxts-module\manifest.json"
+
+        if ((Test-Path $pluginBinary) -and (Test-Path $pluginManifest)) {
+            Write-Ok "UxTS plugin installed: $pluginDir"
+        } elseif (Test-Path (Join-Path $InstallDir "uxts-module.exe")) {
+            # Binary extracted to root — move to plugins subdirectory
+            if (!(Test-Path $pluginDir)) {
+                New-Item -ItemType Directory -Force -Path $pluginDir | Out-Null
+            }
+            Move-Item -Path (Join-Path $InstallDir "uxts-module.exe") -Destination $pluginBinary -Force
+            if (Test-Path (Join-Path $InstallDir "manifest.json")) {
+                Move-Item -Path (Join-Path $InstallDir "manifest.json") -Destination $pluginManifest -Force
+            }
+            Write-Ok "UxTS plugin installed: $pluginDir"
+        } else {
+            Write-Warn "UxTS plugin binary not found in archive — skipping"
+        }
+    } else {
+        Write-Info "Plugins skipped (-NoPlugins)"
+        # Clean up plugin files if extracted
+        $pluginDir = Join-Path $InstallDir "plugins"
+        if (Test-Path $pluginDir) {
+            Remove-Item $pluginDir -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
     # Install PowerShell wrapper
     $wrapperUrl  = "https://raw.githubusercontent.com/$GITHUB_WINDOWS_REPO/main/scripts/mdemg.ps1"
     $wrapperPath = Join-Path $InstallDir "mdemg-wrapper.ps1"
@@ -359,6 +393,13 @@ function Show-PostInstall {
     Write-Host "    mdemg start --auto-migrate  # Start server" -ForegroundColor White
     Write-Host "    mdemg status                # Verify everything" -ForegroundColor White
     Write-Host "    mdemg ingest --path .       # Ingest your codebase" -ForegroundColor White
+    Write-Host ""
+    # Show plugin status
+    $pluginBinary = Join-Path $InstallDir "plugins\uxts-module\uxts-module.exe"
+    if (Test-Path $pluginBinary) {
+        Write-Host "  Plugins: UxTS module (enabled)" -ForegroundColor Cyan
+        Write-Host "           Plugins dir: $(Join-Path $InstallDir 'plugins')" -ForegroundColor DarkGray
+    }
     Write-Host ""
     Write-Host "  Installed to: $InstallDir" -ForegroundColor DarkGray
     Write-Host "  Docs: https://github.com/reh3376/homebrew-mdemg" -ForegroundColor DarkGray
