@@ -1028,14 +1028,12 @@ mdemg mcp
 mdemg upgrade --dry-run
 ```
 
-> **Known limitation:** `mdemg upgrade` looks for `.tar.gz` archives but Windows releases use `.zip`. The upgrade will report "no release binary found for windows/amd64" until this is fixed. Document the exact error message.
+**Expected:** Reports current version and latest available version, then downloads and installs the latest release from GitHub.
 
-**Expected:** Reports current version and latest version. May fail to find Windows binary.
+- [ ] **PASS** — upgrade check runs and reports version information
+- [ ] **FAIL** — upgrade fails (note error message below)
 
-- [ ] **PASS** — upgrade check runs (even if no binary found)
-- [ ] **EXPECTED FAIL** — reports `.tar.gz` not found for windows/amd64
-
-**Error message received:** _______________
+**Error message received (if failed):** _______________
 
 ---
 
@@ -1096,11 +1094,9 @@ Register-ScheduledTask -TaskName "MDEMG Server" -Action $action -Trigger $trigge
 Get-Command bash -ErrorAction SilentlyContinue
 ```
 
-### 3. `mdemg upgrade` — Archive Format Mismatch
+### 3. `mdemg upgrade` — Self-Update
 
-**Issue:** The upgrade command constructs a `.tar.gz` archive filename (`mdemg_{version}_{os}_{arch}.tar.gz`) but Windows releases are packaged as `.zip`. The upgrade will fail with "no release binary found for windows/amd64."
-
-**Workaround:** Use the PowerShell installer to upgrade:
+`mdemg upgrade` downloads and installs the latest release directly from GitHub. If the upgrade fails, use the PowerShell installer as a fallback:
 
 ```powershell
 .\Install-MDEMG.ps1 -Upgrade

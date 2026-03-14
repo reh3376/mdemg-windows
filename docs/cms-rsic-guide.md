@@ -25,7 +25,8 @@ This guide covers the two core runtime systems in MDEMG: the **Conversation Memo
    - [History and Calibration](#history-and-calibration)
    - [Learning Freeze](#learning-freeze)
    - [Rollback](#rollback)
-6. [Practical Examples](#practical-examples)
+6. [Jiminy Inner Voice Guidance](#jiminy-inner-voice-guidance)
+7. [Practical Examples](#practical-examples)
    - [Setting Up CMS for a New AI Agent](#setting-up-cms-for-a-new-ai-agent)
    - [Daily Maintenance Workflow](#daily-maintenance-workflow)
    - [Debugging Poor Retrieval Quality](#debugging-poor-retrieval-quality)
@@ -1252,6 +1253,103 @@ Rollback restores the pre-action state. It will fail if the snapshot has expired
 
 ---
 
+## Jiminy Inner Voice Guidance
+
+Jiminy is MDEMG's proactive guidance service — the inner voice that surfaces constraints, corrections, patterns, conflicts, risks, and frontier nodes before you encounter problems. Named after Jiminy Cricket, it acts as the conscience that guides without being asked.
+
+### What Jiminy Does
+
+When called, Jiminy retrieves:
+- **Constraints**: Hard rules learned from past observations ("Never hardcode secrets")
+- **Corrections**: Past mistakes and their fixes ("Timeout is 60s, not 30s")
+- **Patterns**: Successful approaches from the graph
+- **Conflicts**: Contradictions between current context and stored knowledge
+- **Risks**: High-confidence warnings about the current operation
+- **Suggestions**: Proactive recommendations based on context
+- **Frontiers**: Knowledge gaps worth exploring (nodes with strong evidence but few connections)
+
+### Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `JIMINY_ENABLED` | `true` | Enable Jiminy inner voice guidance |
+| `JIMINY_TIMEOUT_MS` | `6000` | Overall timeout for Guide() in ms |
+| `JIMINY_MAX_ITEMS` | `10` | Max guidance items returned |
+| `JIMINY_MIN_CONFIDENCE` | `0.3` | Minimum confidence to include item |
+| `JIMINY_INCLUDE_FRONTIERS` | `true` | Include frontier node suggestions |
+| `JIMINY_FRONTIER_MIN_SIM` | `0.5` | Min similarity for frontier nodes |
+
+### Calling Jiminy
+
+**Endpoint**: `POST /v1/jiminy/guide`
+
+```bash
+# curl
+curl -s -X POST http://localhost:9999/v1/jiminy/guide ^
+  -H "Content-Type: application/json" ^
+  -d "{\"space_id\": \"my-project\", \"context\": \"Refactoring the authentication module\", \"file_path\": \"src/auth.go\"}"
+```
+
+```powershell
+# PowerShell
+$body = @{space_id="my-project"; context="Refactoring the authentication module"; file_path="src/auth.go"} | ConvertTo-Json
+irm http://localhost:9999/v1/jiminy/guide -Method Post -Body $body -ContentType "application/json"
+```
+
+**Response**:
+
+```json
+{
+  "data": {
+    "guidance": [
+      {
+        "type": "constraint",
+        "content": "All API endpoints must validate JWT tokens",
+        "confidence": 0.95,
+        "source_nodes": ["const-abc123"]
+      },
+      {
+        "type": "correction",
+        "content": "Token expiry is 60 minutes, not 30",
+        "confidence": 0.88,
+        "source_nodes": ["obs-xyz789"]
+      }
+    ],
+    "prompt_augmentation": "JIMINY GUIDANCE: [constraint] All API endpoints must validate JWT tokens...",
+    "confidence": 0.91,
+    "rationale": "2 items selected based on file context and learned constraints",
+    "warnings": [],
+    "source_counts": { "constraint": 1, "correction": 1, "frontier": 0 }
+  }
+}
+```
+
+If `JIMINY_ENABLED=false`, the server returns `503 Service Unavailable`.
+
+### Claude Code Hook Integration
+
+Jiminy is most powerful when integrated into your Claude Code workflow. The `prompt-context.sh` hook calls Jiminy automatically on every prompt and injects the guidance into the system context.
+
+To install Claude Code hooks (which include Jiminy integration):
+
+```powershell
+# Install Claude hooks (includes Jiminy prompt injection)
+mdemg hooks install --type claude --space-id my-project
+
+# Or install all hook types at once
+mdemg hooks install --type all --space-id my-project
+```
+
+After installation, every Claude Code prompt automatically receives Jiminy guidance injected as a `=== JIMINY GUIDANCE ===` block in the system reminder. This means constraints and corrections surface before Claude acts, not after.
+
+To verify hooks are installed:
+
+```powershell
+mdemg hooks list
+```
+
+---
+
 ## Practical Examples
 
 ### Setting Up CMS for a New AI Agent
@@ -1629,3 +1727,9 @@ Write-Host "Snapshots held: $($Health.safety.rollback.snapshots_held)"
 | GET | `/v1/learning/freeze/status` | Check freeze state |
 | GET | `/v1/learning/stats` | Learning edge statistics |
 | POST | `/v1/learning/prune` | Manually prune edges |
+
+### Jiminy Guidance
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/v1/jiminy/guide` | Get proactive inner voice guidance |

@@ -26,8 +26,10 @@ Complete HTTP API reference for the Multi-Dimensional Emergent Memory Graph (MDE
 10. [Org Reviews](#org-reviews)
 11. [Meta-Learning](#meta-learning)
 12. [Guardrail Validation](#guardrail-validation)
-13. [Spaces & Freshness](#spaces--freshness)
-14. [Jobs (SSE)](#jobs-sse)
+13. [Jiminy Guidance](#jiminy-guidance)
+14. [Spaces & Freshness](#spaces--freshness)
+15. [Jobs (SSE)](#jobs-sse)
+16. [MCP Server Tools](#mcp-server-tools)
 15. [Codebase Ingestion API](#codebase-ingestion-api)
 16. [Ingestion Pipeline API](#ingestion-pipeline-api)
 17. [Scraper API](#scraper-api)
@@ -795,6 +797,40 @@ curl -s http://localhost:9999/v1/memory/query/metrics
 
 ---
 
+### GET /v1/memory/frontiers
+
+List frontier nodes — nodes with strong evidence but few outgoing connections, representing knowledge boundaries worth exploring.
+
+**Query Parameters:**
+- `space_id` (required): space identifier
+- `limit` (optional): max results (default: 20, max: 100)
+
+**Response (200):**
+```json
+{
+  "frontiers": [
+    {
+      "node_id": "node-abc",
+      "name": "Untested Auth Path",
+      "content": "...",
+      "evidence_count": 5,
+      "outgoing_edge_count": 1,
+      "layer": 0
+    }
+  ],
+  "count": 1
+}
+```
+
+**Status Codes:** `200 OK`, `400 Bad Request`
+
+```bash
+# curl (works on Windows 10+)
+curl -s "http://localhost:9999/v1/memory/frontiers?space_id=demo&limit=20"
+```
+
+---
+
 ## Learning Edges
 
 ### POST /v1/learning/freeze
@@ -887,6 +923,30 @@ curl -s "http://localhost:9999/v1/learning/stats?space_id=demo"
 Prune weak learning edges.
 
 **Status Codes:** `200 OK`, `400 Bad Request`
+
+---
+
+### POST /v1/learning/negative-feedback
+
+Apply negative feedback to reduce edge weights between query nodes and rejected result nodes.
+
+**Request Body:**
+```json
+{
+  "space_id": "my-project",
+  "query_node_ids": ["node-abc", "node-def"],
+  "rejected_node_ids": ["node-xyz", "node-uvw"]
+}
+```
+
+**Status Codes:** `200 OK`, `400 Bad Request`, `500 Internal Server Error`
+
+```bash
+# curl (works on Windows 10+)
+curl -s -X POST http://localhost:9999/v1/learning/negative-feedback ^
+  -H "Content-Type: application/json" ^
+  -d "{\"space_id\":\"demo\",\"query_node_ids\":[\"node-abc\"],\"rejected_node_ids\":[\"node-xyz\"]}"
+```
 
 ---
 
@@ -1654,6 +1714,65 @@ Validate code changes against learned constraints. Used in git pre-commit hooks.
 curl -s -X POST http://localhost:9999/v1/memory/guardrail/validate ^
   -H "Content-Type: application/json" ^
   -d "{\"space_id\":\"demo\",\"files_changed\":[\"src/main.go\"],\"diff\":\"...\"}"
+```
+
+---
+
+## Jiminy Guidance
+
+### POST /v1/jiminy/guide
+
+Proactive guidance from the Jiminy inner voice service. Surfaces constraints, corrections, patterns, conflicts, risks, suggestions, and frontier nodes relevant to the current context.
+
+**Request Body:**
+```json
+{
+  "space_id": "my-project",         // required
+  "context": "Refactoring auth",    // required
+  "file_path": "src/auth.go",       // optional
+  "agent_output": "...",            // optional
+  "query": "...",                   // optional
+  "session_id": "claude-core",      // optional
+  "max_items": 10                   // optional
+}
+```
+
+**Response (200):**
+```json
+{
+  "data": {
+    "guidance": [
+      {
+        "type": "constraint",
+        "content": "All endpoints must validate JWT tokens",
+        "confidence": 0.92,
+        "source_nodes": ["const-abc"]
+      }
+    ],
+    "prompt_augmentation": "Context-injected guidance text...",
+    "confidence": 0.85,
+    "rationale": "Selected based on file context and active constraints",
+    "warnings": [],
+    "source_counts": { "constraint": 1, "correction": 0, "frontier": 2 }
+  }
+}
+```
+
+**Guidance types:** `constraint`, `correction`, `pattern`, `conflict`, `risk`, `suggestion`, `frontier`
+
+**Status Codes:** `200 OK`, `400 Bad Request`, `503 Service Unavailable` (Jiminy disabled)
+
+```bash
+# curl (works on Windows 10+)
+curl -s -X POST http://localhost:9999/v1/jiminy/guide ^
+  -H "Content-Type: application/json" ^
+  -d "{\"space_id\":\"myproject\",\"context\":\"Refactoring auth\"}"
+```
+
+```powershell
+# PowerShell
+$body = @{space_id="myproject"; context="Refactoring auth"} | ConvertTo-Json
+irm http://localhost:9999/v1/jiminy/guide -Method Post -Body $body -ContentType "application/json"
 ```
 
 ---
@@ -2450,6 +2569,28 @@ Get Hebbian signal learner effectiveness metrics.
 
 ---
 
+### POST /v1/self-improve/orchestration/reset
+
+Reset the RSIC orchestration state (clears in-progress cycle tracking). Useful when a cycle gets stuck.
+
+**Request Body:** None required.
+
+**Response (200):**
+```json
+{
+  "reset": true
+}
+```
+
+**Status Codes:** `200 OK`, `503 Service Unavailable`
+
+```bash
+# curl (works on Windows 10+)
+curl -s -X POST http://localhost:9999/v1/self-improve/orchestration/reset
+```
+
+---
+
 ### GET /v1/self-improve/rollback
 
 List available rollback snapshots.
@@ -3017,6 +3158,57 @@ List gap interview sessions.
 ### GET/POST /v1/system/gap-interviews/{id}
 
 Manage a specific gap interview.
+
+---
+
+## MCP Server Tools
+
+The MCP (Model Context Protocol) server exposes 20 tools across 5 categories. These are accessed via the MCP protocol (JSON-RPC over stdin/stdout when running `mdemg mcp`) rather than HTTP.
+
+### Memory (6 tools)
+
+| Tool | Description |
+|------|-------------|
+| `memory_store` | Store an observation in a space |
+| `memory_recall` | Semantic search over a space |
+| `memory_associate` | Create or strengthen a learning edge between nodes |
+| `memory_reflect` | Deep retrieval with graph traversal |
+| `memory_status` | Get space health and statistics |
+| `memory_symbols` | Search for code symbols |
+
+### Ingestion (5 tools)
+
+| Tool | Description |
+|------|-------------|
+| `memory_ingest_trigger` | Trigger a codebase ingestion job |
+| `memory_ingest_status` | Get ingestion job status |
+| `memory_ingest_cancel` | Cancel a running ingestion job |
+| `memory_ingest_jobs` | List all ingestion jobs |
+| `memory_ingest_files` | Ingest specific files |
+
+### Space (1 tool)
+
+| Tool | Description |
+|------|-------------|
+| `memory_space_freshness` | Get freshness information for a space |
+
+### Linear (6 tools)
+
+| Tool | Description |
+|------|-------------|
+| `linear_create_issue` | Create a Linear issue |
+| `linear_list_issues` | List issues with optional filters |
+| `linear_read_issue` | Get a specific issue by ID |
+| `linear_update_issue` | Update an issue |
+| `linear_add_comment` | Add a comment to an issue |
+| `linear_search` | Search across Linear issues |
+
+### Cognitive (2 tools)
+
+| Tool | Description |
+|------|-------------|
+| `validate_changes` | Validate code changes against learned constraints (guardrail) |
+| `jiminy_guide` | Get proactive Jiminy guidance for current context |
 
 ---
 

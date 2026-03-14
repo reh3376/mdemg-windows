@@ -8,7 +8,8 @@
 |-------------|---------|---------|
 | **PowerShell** | 7.0+ | `winget install Microsoft.PowerShell` |
 | **Docker Desktop** | latest | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) or `winget install Docker.DockerDesktop` |
-| **OpenAI API key** | — | [platform.openai.com](https://platform.openai.com) — or use [Ollama](https://ollama.com) for local-only |
+| **Neo4j** | 5.11+ | Managed automatically via `mdemg db start` (pulls `neo4j:5` Docker image) |
+| **OpenAI API key** | — | [platform.openai.com](https://platform.openai.com) — or use [Ollama](https://ollama.com) for local-only. **Note:** If using Ollama, the embedding model must produce 3072-dimensional vectors to match the vector index. `nomic-embed-text` produces 768 dimensions and will not work. Use `mxbai-embed-large` (1024-dim) or configure a compatible model that matches your index. |
 | **Git** (optional) | latest | `winget install Git.Git` — needed for git hooks and incremental ingest |
 
 ---
@@ -184,14 +185,14 @@ mdemg config validate
 # Option B — Scoop
 scoop update mdemg
 
-# Option C — mdemg self-update (may fail — see note)
+# Option C — mdemg self-update
 mdemg upgrade
 
 # After upgrading, apply any new migrations
 mdemg start --auto-migrate
 ```
 
-> **Note:** `mdemg upgrade` currently looks for `.tar.gz` archives, but Windows releases are `.zip`. It may report "no release binary found for windows/amd64." Use Option A or B until this is fixed.
+> **Note:** `mdemg upgrade` downloads and installs the latest release directly from GitHub.
 
 ## Uninstall
 
