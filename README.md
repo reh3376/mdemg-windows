@@ -112,6 +112,7 @@ mdemg ingest --path .         # Ingest your codebase
 | `mdemg plugin` | Manage MDEMG plugins |
 | `mdemg space` | Manage spaces (list, export, import, copy, delete, rename, info) |
 | `mdemg demo` | Run interactive demo |
+| `mdemg menubar` | Manage menu bar companion app (macOS only) |
 | `mdemg upgrade` | Self-update to latest release |
 
 For complete flag details, see the [CLI Reference](docs/cli-reference.md).

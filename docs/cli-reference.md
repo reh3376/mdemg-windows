@@ -91,6 +91,7 @@ Interactive project initialization wizard. Detects the local environment (Docker
 | `--embedding-provider` | string | `""` | Pre-set embedding provider (openai/ollama) |
 | `--no-hooks` | bool | `false` | Skip git hook installation |
 | `--no-ide` | bool | `false` | Skip IDE config generation |
+| `--no-menubar` | bool | `false` | Skip menu bar app installation (macOS only) |
 
 **Usage Examples:**
 ```powershell
@@ -1066,6 +1067,42 @@ mdemg upgrade --force
 ```
 
 **See Also:** `mdemg version`
+
+---
+
+### `mdemg menubar`
+
+Parent command for managing the MDEMG menu bar companion app. **macOS only** — on Windows and Linux, this command returns an error explaining it is not available.
+
+Subcommands: `start`, `stop`, `restart`, `status`
+
+The menu bar app provides a system tray icon showing server health status and quick access to MDEMG features. On macOS, `mdemg init` can automatically download and install it.
+
+### `mdemg menubar start`
+
+**Synopsis:** `mdemg menubar start`
+
+Launch the MDEMG menu bar app. Searches for `MdemgMenuBar.app` in `~/Applications`, `/Applications`, and via Spotlight.
+
+### `mdemg menubar stop`
+
+**Synopsis:** `mdemg menubar stop`
+
+Stop the running menu bar app. Sends SIGTERM, polls for exit (up to 10s), then force kills if needed.
+
+### `mdemg menubar restart`
+
+**Synopsis:** `mdemg menubar restart`
+
+Stop and relaunch the menu bar app.
+
+### `mdemg menubar status`
+
+**Synopsis:** `mdemg menubar status`
+
+Show whether the menu bar app is running (with PID) and its install path.
+
+> **Note:** These commands are macOS-only. On Windows, the menu bar app is not available.
 
 ---
 
@@ -2234,6 +2271,11 @@ mdemg
       detach-agent    Detach an AI agent adapter
       generate-hooks  Generate git hooks
       uninstall       Uninstall sidecar
+    menubar           Manage menu bar app (macOS only)
+      start           Launch the menu bar app
+      stop            Stop the menu bar app
+      restart         Restart the menu bar app
+      status          Show menu bar app status
     upgrade           Self-update the mdemg binary
 
   Advanced:
