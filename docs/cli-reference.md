@@ -782,7 +782,7 @@ mdemg hooks list
 
 Parent command for sidecar lifecycle management. The sidecar manages MDEMG as a dependency of your project with a formal lifecycle: `init -> install -> up -> running -> down -> stopped`.
 
-Subcommands: `init`, `status`, `install`, `up`, `down`, `restart`, `upgrade`, `doctor`, `attach-agent`, `detach-agent`, `generate-hooks`, `uninstall`
+Subcommands: `init`, `status`, `install`, `up`, `down`, `restart`, `upgrade`, `doctor`, `attach-agent`, `detach-agent`, `generate-hooks`, `quickstart`, `uninstall`
 
 ---
 
@@ -963,18 +963,25 @@ mdemg sidecar doctor --format json
 
 **Synopsis:** `mdemg sidecar attach-agent <adapter-name> [flags]`
 
-Attach an AI agent adapter to the sidecar configuration.
+Attach an AI agent adapter to the sidecar configuration. Merges MDEMG's MCP server config into the agent's config file with backup, idempotency, and dry-run support.
+
+For `claude-code`, this also automatically sets `enableAllProjectMcpServers: true` in `.claude\settings.local.json` to ensure MCP servers are not silently disabled. Use `--no-settings` to opt out.
+
+Supported adapters: `claude-code`, `codex`
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--dry-run` | bool | `false` | Preview changes without executing |
-| `--print-only` | bool | `false` | Print the adapter config that would be written |
+| `--print-only` | bool | `false` | Print the MCP config payload to stdout and exit |
+| `--no-settings` | bool | `false` | Skip enabling `enableAllProjectMcpServers` in settings |
 | `--format` | string | `"text"` | Output format (`text`, `json`) |
 
 **Usage Examples:**
 ```powershell
 mdemg sidecar attach-agent claude-code
-mdemg sidecar attach-agent cursor --dry-run
+mdemg sidecar attach-agent codex --dry-run
+mdemg sidecar attach-agent claude-code --print-only
+mdemg sidecar attach-agent claude-code --no-settings
 ```
 
 **See Also:** `mdemg sidecar detach-agent`
@@ -1005,7 +1012,12 @@ mdemg sidecar detach-agent cursor
 
 **Synopsis:** `mdemg sidecar generate-hooks [flags]`
 
-Generate git hooks based on the sidecar configuration.
+Generate Claude Code hooks for CMS integration. Writes two hook scripts using the endpoint and space ID from sidecar configuration, enabling project-scoped CMS memory:
+
+- **`session-start.sh`** — Restores CMS memory context on every session start (calls `/v1/conversation/resume`), displays RSIC health, and detects anomalies.
+- **`prompt-context.sh`** — Recalls relevant CMS context and Jiminy guidance for each user prompt (calls `/v1/conversation/recall` and `/v1/jiminy/guide`).
+
+Both hooks are automatically registered in `.claude\settings.local.json`.
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
@@ -1016,9 +1028,42 @@ Generate git hooks based on the sidecar configuration.
 ```powershell
 mdemg sidecar generate-hooks
 mdemg sidecar generate-hooks --dry-run
+mdemg sidecar generate-hooks --format json
 ```
 
 **See Also:** `mdemg hooks install`
+
+---
+
+### `mdemg sidecar quickstart`
+
+**Synopsis:** `mdemg sidecar quickstart [flags]`
+
+One-command sidecar onboarding. Runs the full setup sequence, skipping steps that are already done and stopping on the first failure:
+
+1. `mdemg sidecar init --defaults`
+2. `mdemg sidecar install`
+3. `mdemg sidecar up`
+4. `mdemg sidecar attach-agent <agents>`
+5. `mdemg sidecar generate-hooks`
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--profile` | string | `"local"` | Runtime profile (`local`, `studio-remote`) |
+| `--agents` | string | `"claude-code"` | Comma-separated adapter names (`claude-code`, `codex`) |
+| `--endpoint` | string | `""` | Override sidecar API endpoint |
+| `--format` | string | `"text"` | Output format (`text`, `json`) |
+| `--dry-run` | bool | `false` | Show what would happen without making changes |
+
+**Usage Examples:**
+```powershell
+mdemg sidecar quickstart
+mdemg sidecar quickstart --profile local --agents claude-code
+mdemg sidecar quickstart --endpoint http://macstudio.local:9999
+mdemg sidecar quickstart --dry-run
+```
+
+**See Also:** `mdemg sidecar init`, `mdemg sidecar status`
 
 ---
 
