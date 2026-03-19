@@ -1,6 +1,6 @@
 # MDEMG Windows Beta Testing Guide
 
-**Version under test:** v0.2.10
+**Version under test:** v0.2.15
 **Date:** _______________
 **Tester:** _______________
 **Machine specs:** _______________
@@ -17,8 +17,8 @@
 | 2 | Ingestion | 8 | | | | |
 | 3 | CMS & RSIC | 10 | | | | |
 | 4 | Backup & Maintenance | 5 | | | | |
-| 5 | Advanced | 7 | | | | |
-| **Total** | | **39** | | | | |
+| 5 | Advanced | 9 | | | | |
+| **Total** | | **41** | | | | |
 
 ---
 
@@ -1037,9 +1037,53 @@ mdemg upgrade --dry-run
 
 ---
 
+### T5.8: Teardown Dry Run
+
+```powershell
+cd C:\Projects\mdemg-test
+mdemg teardown --dry-run
+```
+
+**Expected:** Lists all artifacts that would be removed (server, Docker container/volume, hooks, MCP configs, `.mdemg\` directory) without making any changes.
+
+- [ ] **PASS** — dry run lists artifacts without making changes
+
+---
+
+### T5.9: Teardown Execute
+
+> **Warning:** This removes all MDEMG artifacts for the test project. Run this test LAST — it replaces the manual cleanup steps below.
+
+```powershell
+cd C:\Projects\mdemg-test
+mdemg teardown --yes
+```
+
+**Expected:** Server stops, Docker container/volume removed, hooks uninstalled, MCP configs cleaned, `.mdemg\` backed up and removed. Output shows each phase completing.
+
+```powershell
+# Verify cleanup
+if (Test-Path .mdemg) { "FAIL: .mdemg still exists" } else { "OK: .mdemg removed" }
+```
+
+- [ ] **PASS** — teardown completes, all artifacts removed, backup created
+
+---
+
 ## Cleanup / Teardown
 
-Run these steps to restore the machine to pre-test state:
+### Recommended: Use `mdemg teardown` (if T5.9 was not run)
+
+```powershell
+cd C:\Projects\mdemg-test
+mdemg teardown --yes
+```
+
+This single command handles steps 1-6 below automatically: stops the server, removes Docker container/volume, uninstalls hooks, cleans MCP/IDE configs, backs up and removes `.mdemg\`.
+
+### Manual cleanup (fallback)
+
+If `mdemg teardown` is not available or failed:
 
 ```powershell
 # 1. Stop the server
@@ -1057,15 +1101,19 @@ mdemg db stop --remove
 # 4. Remove Docker volume
 docker volume ls -q --filter name=mdemg | ForEach-Object { docker volume rm $_ }
 
-# 5. Remove test project
-cd C:\
-Remove-Item C:\Projects\mdemg-test -Recurse -Force
-
-# 6. Remove MDEMG config (optional — only if uninstalling entirely)
+# 5. Remove MDEMG config (optional — only if uninstalling entirely)
 # Remove-Item "$HOME\.mdemg" -Recurse -Force
 
-# 7. Clean up test secret
+# 6. Clean up test secret
 mdemg config set-secret TEST_BETA_KEY ""
+```
+
+### Final cleanup (all methods)
+
+```powershell
+# Remove test project
+cd C:\
+Remove-Item C:\Projects\mdemg-test -Recurse -Force
 ```
 
 ---

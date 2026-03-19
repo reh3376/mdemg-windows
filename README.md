@@ -114,6 +114,7 @@ mdemg ingest --path .         # Ingest your codebase
 | `mdemg demo` | Run interactive demo |
 | `mdemg menubar` | Manage menu bar companion app (macOS only) |
 | `mdemg upgrade` | Self-update to latest release |
+| `mdemg teardown` | Remove all MDEMG artifacts (`--dry-run`, `--export`, `--keep-data`, `--full`) |
 
 For complete flag details, see the [CLI Reference](docs/cli-reference.md).
 
@@ -197,20 +198,32 @@ mdemg start --auto-migrate
 
 ## Uninstall
 
+### Quick Teardown (recommended)
+
 ```powershell
-# Stop everything
-mdemg stop
-mdemg db stop --remove
+# Remove all instance artifacts (stops server, cleans hooks, IDE configs, etc.)
+mdemg teardown --yes
 
-# Remove Docker volumes
-docker volume ls -q --filter name=mdemg | ForEach-Object { docker volume rm $_ }
-
-# Uninstall CLI
+# Then remove the binary and PATH entry
 .\Install-MDEMG.ps1 -Uninstall
-
-# (Optional) Remove config and data
-Remove-Item "$HOME\.mdemg" -Recurse -Force
 ```
+
+### Full System Removal
+
+```powershell
+# Remove everything including binary, plugins, completions
+mdemg teardown --full --yes
+
+# Or step by step:
+mdemg teardown --yes                    # Instance artifacts
+mdemg db stop --remove                  # Remove Neo4j container
+docker volume ls -q --filter name=mdemg | ForEach-Object { docker volume rm $_ }
+.\Install-MDEMG.ps1 -Uninstall         # Binary and PATH
+Remove-Item "$HOME\.mdemg" -Recurse -Force   # Config and data
+```
+
+> **Note:** `mdemg teardown` creates a backup of `.mdemg/` before removal. Use `--export` to also export CMS data, or `--keep-data` to preserve the Neo4j volume.
+> Use `mdemg teardown --dry-run` to preview what would be removed without executing.
 
 ---
 

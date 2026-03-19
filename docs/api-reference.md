@@ -1776,6 +1776,35 @@ $body = @{space_id="myproject"; context="Refactoring auth"} | ConvertTo-Json
 irm http://localhost:9999/v1/jiminy/guide -Method Post -Body $body -ContentType "application/json"
 ```
 
+**Note:** The guide response now includes a `guidance_id` (UUID) for effectiveness tracking.
+
+### POST /v1/jiminy/feedback
+
+Record whether Jiminy guidance was followed, ignored, or contradicted. Requires a `guidance_id` from a prior guide response.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `guidance_id` | string | Yes | The guidance_id from the guide response |
+| `action_summary` | string | No | Description of the action the agent took |
+| `space_id` | string | No | Memory space (for context) |
+
+```cmd
+curl -s -X POST http://localhost:9999/v1/jiminy/feedback ^
+  -H "Content-Type: application/json" ^
+  -d "{\"guidance_id\":\"<id>\",\"action_summary\":\"validated all inputs\",\"space_id\":\"myproject\"}"
+```
+
+```powershell
+$body = @{guidance_id="<id>"; action_summary="validated all inputs"; space_id="myproject"} | ConvertTo-Json
+irm http://localhost:9999/v1/jiminy/feedback -Method Post -Body $body -ContentType "application/json"
+```
+
+**Outcome values:** `followed`, `ignored`, `contradicted`, `unknown`
+
+**Status Codes:** `200 OK`, `400 Bad Request` (empty guidance_id), `503 Service Unavailable`
+
+**Related environment variables:** `JIMINY_EFFECTIVENESS_ENABLED` (default: true), `JIMINY_EFFECTIVENESS_TTL_SEC` (default: 1800)
+
 ---
 
 ## Spaces & Freshness

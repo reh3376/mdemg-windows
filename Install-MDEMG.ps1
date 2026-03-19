@@ -333,15 +333,32 @@ function Invoke-Uninstall {
     param([string]$InstallDir)
     Write-Step "Uninstalling MDEMG"
 
-    # Stop server if running
-    $pidFile = Join-Path $env:USERPROFILE ".mdemg\mdemg.pid"
-    if (Test-Path $pidFile) {
-        $procId = (Get-Content $pidFile).Trim()
-        Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
-        Write-Ok "Server stopped"
+    # Try mdemg teardown first (cleans instance artifacts comprehensively)
+    $mdemgBin = Join-Path $InstallDir "mdemg.exe"
+    $teardownRan = $false
+    if (Test-Path $mdemgBin) {
+        Write-Info "Running mdemg teardown..."
+        try {
+            $output = & $mdemgBin teardown --yes 2>&1
+            Write-Ok "Instance teardown complete"
+            $teardownRan = $true
+        } catch {
+            Write-Warn "mdemg teardown failed (falling back to manual cleanup): $_"
+        }
     }
 
-    # Remove install dir
+    # Manual cleanup (fallback or supplement)
+    if (!$teardownRan) {
+        # Stop server if running
+        $pidFile = Join-Path $env:USERPROFILE ".mdemg\mdemg.pid"
+        if (Test-Path $pidFile) {
+            $procId = (Get-Content $pidFile).Trim()
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+            Write-Ok "Server stopped"
+        }
+    }
+
+    # Remove install dir (binary, plugins, etc.)
     if (Test-Path $InstallDir) {
         Remove-Item $InstallDir -Recurse -Force
         Write-Ok "Removed: $InstallDir"

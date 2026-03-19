@@ -1564,6 +1564,46 @@ mdemg demo --endpoint http://localhost:8080
 
 ---
 
+### `mdemg teardown`
+
+**Synopsis:** `mdemg teardown [flags]`
+
+Remove all MDEMG artifacts from the current project.
+
+**Instance scope** (default): Stops server, removes Docker container/volume, deletes Neo4j space data, removes keyring secrets, uninstalls hooks, cleans up IDE configs, removes `.mdemg\` directory, and deregisters from companion apps.
+
+**Full scope** (`--full`): Additionally removes system-level artifacts: binary, plugins, completions, and systemd units.
+
+| Flag | Type | Default | Description |
+|------|------|---------|-------------|
+| `--dry-run` | bool | `false` | Preview what would be removed without executing |
+| `--format` | string | `text` | Output format (`text`, `json`) |
+| `--yes`, `-y` | bool | `false` | Skip confirmation prompt |
+| `--force` | bool | `false` | Allow deletion of protected spaces |
+| `--full` | bool | `false` | Include system-level cleanup |
+| `--export` | bool | `false` | Export CMS/RSIC/Jiminy data before teardown |
+| `--keep-data` | bool | `false` | Preserve Neo4j volume |
+| `--space-id` | string | `""` | Target specific space (defaults to project config) |
+
+**Usage Examples:**
+```powershell
+# Preview what will be removed
+mdemg teardown --dry-run
+
+# Teardown without prompts
+mdemg teardown --yes
+
+# Export data before teardown
+mdemg teardown --export --yes
+
+# Full system removal
+mdemg teardown --full --yes
+```
+
+**See Also:** `mdemg stop`, `mdemg db stop`, `mdemg hooks uninstall`
+
+---
+
 ## Environment Variable Reference
 
 The following table lists all environment variables recognized by MDEMG, grouped by category. These are parsed in `config.FromEnv()`.
