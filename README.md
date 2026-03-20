@@ -116,7 +116,7 @@ mdemg ingest --path .         # Ingest your codebase
 | `mdemg upgrade` | Self-update to latest release |
 | `mdemg teardown` | Remove all MDEMG artifacts (`--dry-run`, `--export`, `--keep-data`, `--full`) |
 
-For complete flag details, see the [CLI Reference](docs/cli-reference.md).
+For complete flag details, see the [CLI Reference](https://github.com/reh3376/mdemg/blob/main/docs/user/cli-reference.md).
 
 ---
 
@@ -124,12 +124,12 @@ For complete flag details, see the [CLI Reference](docs/cli-reference.md).
 
 | Guide | What it covers |
 |-------|---------------|
-| [CLI Reference](docs/cli-reference.md) | All commands, flags, defaults, examples, environment variables |
-| [API Reference](docs/api-reference.md) | Every HTTP endpoint with request/response shapes and curl examples |
-| [CMS & RSIC Guide](docs/cms-rsic-guide.md) | Conversation memory, observation types, surprise scoring, self-improvement |
-| [Ingestion Guide](docs/ingestion-guide.md) | All 8 ingestion methods — codebase, scraper, Linear, webhooks, file watcher, API |
+| [CLI Reference](https://github.com/reh3376/mdemg/blob/main/docs/user/cli-reference.md) | All commands, flags, defaults, examples, environment variables |
+| [API Reference](https://github.com/reh3376/mdemg/blob/main/docs/user/api-reference.md) | Every HTTP endpoint with request/response shapes and curl examples |
+| [CMS & RSIC Guide](https://github.com/reh3376/mdemg/blob/main/docs/user/cms-rsic-guide.md) | Conversation memory, observation types, surprise scoring, self-improvement |
+| [Ingestion Guide](https://github.com/reh3376/mdemg/blob/main/docs/user/ingestion-guide.md) | All 8 ingestion methods — codebase, scraper, Linear, webhooks, file watcher, API |
 
-All documentation uses Windows paths, PowerShell syntax, and Windows-specific tooling (Credential Manager, Task Scheduler, etc.).
+All documentation includes cross-platform examples (bash, PowerShell) with platform-specific subsections.
 
 ---
 
