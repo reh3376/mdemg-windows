@@ -43,8 +43,8 @@ scoop install mdemg
 # Download latest release
 $tag = (Invoke-RestMethod https://api.github.com/repos/reh3376/mdemg/releases/latest).tag_name
 Invoke-WebRequest "https://github.com/reh3376/mdemg/releases/download/$tag/mdemg_$($tag.TrimStart('v'))_windows_amd64.zip" -OutFile mdemg.zip
-Expand-Archive mdemg.zip -DestinationPath "$HOME\mdemg"
-[Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$HOME\mdemg", "User")
+Expand-Archive mdemg.zip -DestinationPath "$env:USERPROFILE\mdemg"
+[Environment]::SetEnvironmentVariable("PATH", "$env:PATH;$env:USERPROFILE\mdemg", "User")
 
 # Verify
 mdemg version
@@ -167,12 +167,12 @@ mdemg config validate
 
 | Problem | Fix |
 |---------|-----|
-| `mdemg` not found after install | Restart terminal; or run `$env:PATH += ";$HOME\mdemg"` |
+| `mdemg` not found after install | Restart terminal; or run `$env:PATH += ";$env:USERPROFILE\mdemg"` |
 | Docker not running | Start Docker Desktop from the taskbar |
 | Neo4j port conflict | `mdemg db start --port 7688` |
 | Missing OpenAI key | Add `OPENAI_API_KEY=sk-...` to `.env` |
 | Neo4j won't start | `docker logs mdemg-neo4j-<folder-name>` |
-| Server won't start | `Get-Content "$HOME\.mdemg\logs\mdemg.log"` |
+| Server won't start | `Get-Content "$env:USERPROFILE\.mdemg\logs\mdemg.log"` |
 | Embedding check fails | `mdemg embeddings check` — verify key and model in config |
 | Script execution policy | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 
@@ -219,7 +219,7 @@ mdemg teardown --yes                    # Instance artifacts
 mdemg db stop --remove                  # Remove Neo4j container
 docker volume ls -q --filter name=mdemg | ForEach-Object { docker volume rm $_ }
 .\Install-MDEMG.ps1 -Uninstall         # Binary and PATH
-Remove-Item "$HOME\.mdemg" -Recurse -Force   # Config and data
+Remove-Item "$env:USERPROFILE\.mdemg" -Recurse -Force   # Config and data
 ```
 
 > **Note:** `mdemg teardown` creates a backup of `.mdemg/` before removal. Use `--export` to also export CMS data, or `--keep-data` to preserve the Neo4j volume.
