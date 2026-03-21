@@ -411,6 +411,10 @@ function Show-PostInstall {
     Write-Host "    mdemg status                # Verify everything" -ForegroundColor White
     Write-Host "    mdemg ingest --path .       # Ingest your codebase" -ForegroundColor White
     Write-Host ""
+    Write-Host "  Jiminy Guidance:" -ForegroundColor White
+    Write-Host "    Inner-voice guidance is configured during 'mdemg init'." -ForegroundColor DarkGray
+    Write-Host "    Default model: gpt-5.4-nano (OpenAI) or qwen3:8b (Ollama)" -ForegroundColor DarkGray
+    Write-Host ""
     # Show plugin status
     $pluginBinary = Join-Path $InstallDir "plugins\uxts-module\uxts-module.exe"
     if (Test-Path $pluginBinary) {
