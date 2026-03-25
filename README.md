@@ -9,7 +9,7 @@
 | **PowerShell** | 7.0+ | `winget install Microsoft.PowerShell` |
 | **Docker Desktop** | latest | [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) or `winget install Docker.DockerDesktop` |
 | **Neo4j** | 5.11+ | Managed automatically via `mdemg db start` (pulls `neo4j:5` Docker image) |
-| **OpenAI API key** | — | [platform.openai.com](https://platform.openai.com) — or use [Ollama](https://ollama.com) for local-only. **Note:** If using Ollama, the embedding model must produce 3072-dimensional vectors to match the vector index. `nomic-embed-text` produces 768 dimensions and will not work. Use `mxbai-embed-large` (1024-dim) or configure a compatible model that matches your index. |
+| **OpenAI API key** | — | [platform.openai.com](https://platform.openai.com) — or use [Ollama](https://ollama.com) for local-only. **Note:** MDEMG requires 3072-dimension embeddings (matching `text-embedding-3-large`). Most Ollama models produce fewer dimensions and are incompatible. For local embeddings, use `qwen3-embedding:8b` (4096 dims, truncated to 3072 via MRL) or configure a model that natively produces 3072 dimensions. Run `mdemg embeddings check` after setup to verify. |
 | **Git** (optional) | latest | `winget install Git.Git` — needed for git hooks and incremental ingest |
 
 ---
